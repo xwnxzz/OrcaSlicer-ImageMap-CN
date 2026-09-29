@@ -6,8 +6,12 @@
 
 | 文件 | 说明 |
 | --- | --- |
-| `OrcaSlicer-ImageMap-CN-v1.0.44-portable.zip`（约 175 MB） | **完整便携包**：程序本体 + 中文补丁 + 使用说明，解压即用 |
-| `OrcaSlicer-ImageMap-CN-v1.0.44-patch-only.zip`（几百 KB） | **只含中文补丁**：适合已经有上游便携版的用户，自己运行补丁脚本 |
+| `OrcaSlicer-ImageMap-CN-v1.0.44-no-plugin.zip`（约 173 MB） | **完整便携包 · 不含插件版**（推荐）：程序本体 + 中文补丁 + 一键启动器；Bambu 网络插件由程序首次运行时自行下载 |
+| `OrcaSlicer-ImageMap-CN-v1.0.44-with-bambu-plugin.zip`（约 220 MB） | **完整便携包 · 含插件版**：额外附带 `plugins\`（Bambu 网络插件 / Agora SDK 等 7 个文件，约 47 MB），启动器首次运行自动装好，离线可用 |
+| `OrcaSlicer-ImageMap-CN-v1.0.44-patch-only.zip`（240 KB） | **只含中文补丁**：适合已有上游便携版的用户，自己运行补丁脚本 |
+
+> 上游官方便携包**也不包含**这些插件文件（由程序运行时下载），所以"不含插件版"与官方内容一致。
+> 含插件版中的插件不是 AGPL 许可，版权归 Bambu Lab / Agora 等；介意者请选不含插件版。
 
 ## 完整包用法
 

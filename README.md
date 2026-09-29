@@ -10,7 +10,7 @@
 | 想要什么 | 去哪里拿 |
 | --- | --- |
 | **完整便携包**（程序本体 + 中文，解压即用，约 175 MB） | 右侧 **Releases** → `OrcaSlicer-ImageMap-CN-v1.0.44-portable.zip` |
-| **只要中文补丁**（几 KB） | 本仓库 `汉化素材/zh-tsv.tsv` + `汉化素材/apply-zh-mo.py` |
+| **只要中文补丁**（240 KB） | Releases → `OrcaSlicer-ImageMap-CN-v1.0.44-patch-only.zip`，或直接下载本仓库 `汉化素材/` |
 
 ## 完整包用法
 

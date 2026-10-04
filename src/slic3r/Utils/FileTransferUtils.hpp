@@ -128,10 +128,20 @@ struct FileTransferModule
 
     ModuleHandle networking_{};
 
+    // DSH-PATCH: the ABI version was looked up but never validated, so a plug-in
+    // built against a different ft_* contract was used silently.
+    int  required_abi_{0};
+    int  plugin_abi_{-1};
+    bool abi_ok_{false};
+
     explicit FileTransferModule(ModuleHandle networking_module, int required_abi_version = 1);
 
     FileTransferModule(const FileTransferModule &)            = delete;
     FileTransferModule &operator=(const FileTransferModule &) = delete;
+
+    /// True when the plug-in exports ft_abi_version and it matches what this build expects.
+    bool abi_ok() const noexcept { return abi_ok_; }
+    int  plugin_abi() const noexcept { return plugin_abi_; }
 };
 
 class FileTransferTunnel

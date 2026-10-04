@@ -1,5 +1,7 @@
 #include <wx/wx.h>
 #include <type_traits>
+#include <stdexcept>
+#include <boost/log/trivial.hpp>
 #include "FileTransferUtils.hpp"
 #include "slic3r/GUI/GUI_App.hpp"
 #include "slic3r/GUI/DeviceCore/DevManager.h"
@@ -13,6 +15,26 @@ FileTransferModule::FileTransferModule(ModuleHandle networking_module, int requi
     ft_free               = sym_lookup<fn_ft_free>(networking_, "ft_free");
     ft_job_result_destroy = sym_lookup<fn_ft_job_result_destroy>(networking_, "ft_job_result_destroy");
     ft_job_msg_destroy    = sym_lookup<fn_ft_job_msg_destroy>(networking_, "ft_job_msg_destroy");
+
+    // DSH-PATCH: validate the plug-in ABI before anything is called through it.
+    required_abi_ = required_abi_version;
+    plugin_abi_   = -1;
+    abi_ok_       = false;
+    if (ft_abi_version) {
+        const int reported = ft_abi_version();
+        plugin_abi_ = reported;
+        abi_ok_     = (reported == required_abi_version);
+        BOOST_LOG_TRIVIAL(info) << "FileTransferModule: plug-in ft_abi_version=" << reported
+                                << ", required=" << required_abi_version
+                                << ", abi_ok=" << (abi_ok_ ? "true" : "false");
+        if (!abi_ok_) {
+            BOOST_LOG_TRIVIAL(error) << "FileTransferModule: ft_* ABI mismatch - the networking plug-in "
+                                        "does not match this build; file-transfer operations are disabled";
+        }
+    } else {
+        BOOST_LOG_TRIVIAL(error) << "FileTransferModule: plug-in does not export ft_abi_version; "
+                                    "the ft_* file-transfer API is unavailable";
+    }
 
     // tunnel
     ft_tunnel_create        = sym_lookup<fn_ft_tunnel_create>(networking_, "ft_tunnel_create");
@@ -39,26 +61,56 @@ FileTransferModule::FileTransferModule(ModuleHandle networking_module, int requi
 
 FileTransferTunnel::FileTransferTunnel(FileTransferModule &m, const std::string &url) : m_(&m)
 {
+    // DSH-PATCH: refuse to touch the plug-in when its ft_* ABI is not the one this
+    // build was compiled against - calling through it crashed inside the plug-in.
+    if (!m_->abi_ok()) {
+        BOOST_LOG_TRIVIAL(error) << "FileTransferTunnel: refusing to create a tunnel, plug-in ft_* ABI mismatch "
+                                    "(plugin=" << m_->plugin_abi() << ", required match failed)";
+        h_ = nullptr;
+        return;
+    }
     FT_TunnelHandle *h{};
-    if (m_->ft_tunnel_create(url.c_str(), &h) != 0 || !h) {
-
+    // DSH-PATCH: the plug-in API may be absent or may refuse to create the tunnel.
+    // Never leave a null handle behind: every later call is handed straight to the
+    // closed-source plug-in and dereferences it (ACCESS_VIOLATION).
+    if (!m_->ft_tunnel_create) {
+        BOOST_LOG_TRIVIAL(error) << "FileTransferTunnel: ft_tunnel_create is not exported by the networking plug-in";
+        h_ = nullptr;
+        return;
+    }
+    const ft_err create_err = m_->ft_tunnel_create(url.c_str(), &h);
+    if (create_err != FT_OK || !h) {
+        BOOST_LOG_TRIVIAL(error) << "FileTransferTunnel: ft_tunnel_create failed, err=" << (int) create_err
+                                 << ", handle=" << (h ? "set" : "null") << ", url=" << url;
+        h_ = nullptr;
+        return;
     }
     h_ = h;
 
     // C API: ft_status_cb(void* user, int old_status, int new_status, int err, const char* msg)
     auto tramp = [](void *user, int old_status, int new_status, int err_code, const char *msg) noexcept {
         auto *self    = reinterpret_cast<FileTransferTunnel *>(user);
+        if (!self) return;
         self->status_ = new_status;
         if (!self->status_cb_) return;
         try {
             self->status_cb_(old_status, new_status, err_code, std::string(msg ? msg : ""));
         } catch (...) {}
     };
+    if (!m_->ft_tunnel_set_status_cb) {
+        BOOST_LOG_TRIVIAL(error) << "FileTransferTunnel: ft_tunnel_set_status_cb is not exported by the networking plug-in";
+        return;
+    }
     if (m_->ft_tunnel_set_status_cb(h_, tramp, this) == ft_err::FT_EXCEPTION) { throw std::runtime_error("ft_tunnel_set_status_cb failed"); }
 }
 
 void FileTransferTunnel::start_connect()
 {
+    // DSH-PATCH: refuse to call into the plug-in without a valid tunnel handle.
+    if (!h_ || !m_->ft_tunnel_start_connect) {
+        BOOST_LOG_TRIVIAL(error) << "FileTransferTunnel::start_connect: no usable tunnel handle/plug-in entry point";
+        throw std::runtime_error("ft_tunnel_start_connect unavailable");
+    }
     // C API: ft_conn_cb(void* user, int ok, int err, const char* msg)
     auto tramp = [](void *user, int ok, int ec, const char *msg) noexcept {
         auto *pcb = reinterpret_cast<ConnectionCb *>(user);
@@ -72,6 +124,13 @@ void FileTransferTunnel::start_connect()
 
 bool FileTransferTunnel::sync_start_connect()
 {
+    // DSH-PATCH: this is the exact call that crashed the application with an
+    // ACCESS_VIOLATION. A null handle was passed to the closed-source plug-in.
+    // Report failure instead of crashing; callers already fall back to FTP-only.
+    if (!h_ || !m_->abi_ok() || !m_->ft_tunnel_sync_connect) {
+        BOOST_LOG_TRIVIAL(error) << "FileTransferTunnel::sync_start_connect: no usable tunnel handle/plug-in entry point";
+        return false;
+    }
     return m_->ft_tunnel_sync_connect(h_) == FT_OK;
 }
 
@@ -80,14 +139,31 @@ void FileTransferTunnel::on_status(TunnelStatusCb cb) { status_cb_ = std::move(c
 
 void FileTransferTunnel::shutdown()
 {
-    if (m_->ft_tunnel_shutdown) (void) m_->ft_tunnel_shutdown(h_);
+    if (h_ && m_->ft_tunnel_shutdown) (void) m_->ft_tunnel_shutdown(h_);
 }
 
 FileTransferJob::FileTransferJob(FileTransferModule &m, const std::string &params_json) : m_(&m)
 {
+    // DSH-PATCH: same ABI gate as FileTransferTunnel.
+    if (!m_->abi_ok()) {
+        BOOST_LOG_TRIVIAL(error) << "FileTransferJob: refusing to create a job, plug-in ft_* ABI mismatch";
+        h_ = nullptr;
+        return;
+    }
     FT_JobHandle *h{};
-    if (m_->ft_job_create(params_json.c_str(), &h) != 0 || !h) {
-
+    // DSH-PATCH: same defect as FileTransferTunnel - do not keep a null handle
+    // that would later be passed to the closed-source plug-in.
+    if (!m_->ft_job_create) {
+        BOOST_LOG_TRIVIAL(error) << "FileTransferJob: ft_job_create is not exported by the networking plug-in";
+        h_ = nullptr;
+        return;
+    }
+    const ft_err create_err = m_->ft_job_create(params_json.c_str(), &h);
+    if (create_err != FT_OK || !h) {
+        BOOST_LOG_TRIVIAL(error) << "FileTransferJob: ft_job_create failed, err=" << (int) create_err
+                                 << ", handle=" << (h ? "set" : "null");
+        h_ = nullptr;
+        return;
     }
     h_ = h;
 
@@ -101,7 +177,8 @@ FileTransferJob::FileTransferJob(FileTransferModule &m, const std::string &param
             self->solve_result(r);
 
             if (self->result_cb_) self->result_cb_(self->res_, self->resp_ec_, self->res_json_, self->res_bin_);
-            self->m_->ft_job_result_destroy(&r);
+            // DSH-PATCH: only call the plug-in when it actually exports the entry point.
+            if (self->m_ && self->m_->ft_job_result_destroy) self->m_->ft_job_result_destroy(&r);
         } catch (...) {
             // swallow
         }
@@ -118,6 +195,10 @@ FileTransferJob::FileTransferJob(FileTransferModule &m, const std::string &param
         } catch (...) {}
     };
 
+    if (!m_->ft_job_set_result_cb) {
+        BOOST_LOG_TRIVIAL(error) << "FileTransferJob: ft_job_set_result_cb is not exported by the networking plug-in";
+        return;
+    }
     if (m_->ft_job_set_result_cb(h_, tramp, this) == ft_err::FT_EXCEPTION) { throw std::runtime_error("ft_job_set_result_cb failed"); }
 }
 
@@ -126,6 +207,8 @@ void FileTransferJob::on_result(ResultCb cb) { result_cb_ = std::move(cb); }
 bool FileTransferJob::get_result(int &ec, int &resp_ec, std::string &json, std::vector<std::byte> &bin, uint32_t timeout_ms)
 {
     if (!h_) throw std::runtime_error("job handle invalid");
+    // DSH-PATCH: guard the plug-in entry point.
+    if (!m_->ft_job_get_result) throw std::runtime_error("ft_job_get_result unavailable");
     ft_job_result result;
     if (m_->ft_job_get_result(h_, timeout_ms, &result) == ft_err::FT_EXCEPTION) return false;
     solve_result(result);
@@ -140,6 +223,8 @@ bool FileTransferJob::get_result(int &ec, int &resp_ec, std::string &json, std::
 void FileTransferJob::start_on(FileTransferTunnel &t)
 {
     if (!h_) throw std::runtime_error("job handle invalid");
+    // DSH-PATCH: guard the plug-in entry point.
+    if (!m_->ft_tunnel_start_job) throw std::runtime_error("ft_tunnel_start_job unavailable");
     if (m_->ft_tunnel_start_job(t.native(), h_) == ft_err::FT_EXCEPTION) { throw std::runtime_error("ft_tunnel_start_job failed"); }
 }
 
@@ -166,12 +251,16 @@ void FileTransferJob::on_msg(MsgCb cb)
         } catch (...) {}
     };
 
+    if (!m_->ft_job_set_msg_cb) {
+        BOOST_LOG_TRIVIAL(error) << "FileTransferJob::on_msg: ft_job_set_msg_cb is not exported by the networking plug-in";
+        return;
+    }
     if (m_->ft_job_set_msg_cb(h_, tramp, this) == ft_err::FT_EXCEPTION) { throw std::runtime_error("ft_job_set_msg_cb failed"); }
 }
 
 bool FileTransferJob::try_get_msg(int &kind, std::string &json)
 {
-    if (!h_) return false;
+    if (!h_ || !m_->ft_job_try_get_msg) return false;
     ft_job_msg m{};
     int        rc = m_->ft_job_try_get_msg(h_, &m);
     if (rc != 0) return false;
@@ -179,17 +268,17 @@ bool FileTransferJob::try_get_msg(int &kind, std::string &json)
     kind = m.kind;
     json.assign(m.json ? m.json : "");
 
-    if (m_->ft_job_msg_destroy)
+    // DSH-PATCH: explicit nullptr tests instead of implicit pointer-to-bool conversion.
+    if (m_->ft_job_msg_destroy != nullptr)
         m_->ft_job_msg_destroy(&m);
-    else if (m_->ft_free && m.json)
+    else if (m_->ft_free != nullptr && m.json != nullptr)
         m_->ft_free((void *) m.json);
 
     return true;
 }
 
-bool FileTransferJob::get_msg(uint32_t timeout_ms, int &kind, std::string &json)
-{
-    if (!h_) return false;
+bool FileTransferJob::get_msg(uint32_t timeout_ms, int &kind, std::string &json){
+    if (!h_ || !m_->ft_job_get_msg) return false;
     ft_job_msg m{};
     int        rc = m_->ft_job_get_msg(h_, timeout_ms, &m);
     if (rc != 0) return false;
@@ -197,9 +286,10 @@ bool FileTransferJob::get_msg(uint32_t timeout_ms, int &kind, std::string &json)
     kind = m.kind;
     json.assign(m.json ? m.json : "");
 
-    if (m_->ft_job_msg_destroy)
+    // DSH-PATCH: explicit nullptr tests instead of implicit pointer-to-bool conversion.
+    if (m_->ft_job_msg_destroy != nullptr)
         m_->ft_job_msg_destroy(&m);
-    else if (m_->ft_free && m.json)
+    else if (m_->ft_free != nullptr && m.json != nullptr)
         m_->ft_free((void *) m.json);
 
     return true;

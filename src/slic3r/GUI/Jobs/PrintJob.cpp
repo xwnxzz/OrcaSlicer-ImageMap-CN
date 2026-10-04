@@ -725,10 +725,33 @@ void PrintJob::process(Ctl &ctl)
             ctl.update_status(curr_percent, _u8L("Sending print job over LAN"));
             is_try_lan_mode = true;
 
-            const BambuLanPrintResult lr = bambu_lan_send_print(req);
+            // Live progress: report the real send percentage into the task's own progress
+            // model. update_fn() maps this onto 20%..70% of the progress bar (the span
+            // between PrintingStageCreate and PrintingStageWaiting), so the bar now moves
+            // smoothly instead of sitting at 10% for the whole upload.
+            int last_percent_reported = -1;
+            auto send_progress = [&ctl, &update_fn, &last_percent_reported]
+                                 (int percent, const std::string &phase, const std::string &) -> bool
+            {
+                if (ctl.was_canceled())
+                    return false;
+                if (percent == last_percent_reported)
+                    return true;
+                last_percent_reported = percent;
+                update_fn((int) SendingPrintJobStage::PrintingStageUpload, percent, phase);
+                return true;
+            };
+
+            const BambuLanPrintResult lr = bambu_lan_send_print(req, send_progress);
             if (lr.ok) {
                 BOOST_LOG_TRIVIAL(error) << "print_job: builtin LAN send OK, remote=" << lr.remote_file;
+                // Land the bar on the Waiting stage; the job then observes the printer and
+                // finishes through the normal path below.
+                update_fn((int) SendingPrintJobStage::PrintingStageWaiting, 0, std::string());
                 result = 0;
+            } else if (lr.error == "canceled" || ctl.was_canceled()) {
+                BOOST_LOG_TRIVIAL(warning) << "print_job: builtin LAN send canceled by user";
+                result = BAMBU_NETWORK_ERR_CANCELED;
             } else {
                 BOOST_LOG_TRIVIAL(error) << "print_job: builtin LAN send FAILED: " << lr.error
                                          << " (ftp_code=" << lr.ftp_http_code << ")";

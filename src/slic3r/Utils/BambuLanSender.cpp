@@ -140,6 +140,74 @@ static std::string now_seq()
     return std::to_string(ms * 1000UL + (counter % 1000));
 }
 
+// Progress plumbing: a transfer owns a [lo,hi] slice of the overall 0..100 range.
+struct DshProgress
+{
+    const BambuLanProgressFn *fn { nullptr };
+    std::string               phase;
+    int                       lo { 0 };
+    int                       hi { 100 };
+    int                       last_reported { -1 };
+    bool                      aborted { false };
+
+    // Maps a 0..100 figure inside this transfer onto the overall range.
+    bool report(int inner)
+    {
+        if (!fn || !(*fn))
+            return true;
+        if (inner < 0)
+            inner = 0;
+        if (inner > 100)
+            inner = 100;
+        const int overall = lo + (hi - lo) * inner / 100;
+        if (overall == last_reported)
+            return true;
+        // only advance; never let the bar move backwards
+        if (overall < last_reported)
+            return true;
+        last_reported = overall;
+        if (!(*fn)(overall, phase, std::string()))
+            aborted = true;
+        return !aborted;
+    }
+};
+
+// Coarse rate limit so the UI is not flooded during a large upload.
+struct DshXferCtx
+{
+    DshProgress *prog { nullptr };
+    ULONG        last_ms { 0 };
+};
+
+static int dsh_curl_xferinfo(void *clientp, curl_off_t dltotal, curl_off_t dlnow,
+                             curl_off_t ultotal, curl_off_t ulnow)
+{
+    if (!clientp)
+        return 0;
+    DshXferCtx *cx = static_cast<DshXferCtx *>(clientp);
+    if (!cx->prog)
+        return 0;
+    if (cx->prog->aborted)
+        return 1;   // non-zero aborts the transfer
+#ifdef _WIN32
+    const ULONG now = (ULONG) ::GetTickCount64();
+#else
+    const ULONG now = (ULONG) time(nullptr) * 1000UL;
+#endif
+    if (now - cx->last_ms < 150)
+        return 0;
+    cx->last_ms = now;
+    int pct = 0;
+    if (ultotal > 0)
+        pct = (int) (ulnow * 100 / ultotal);
+    else if (dltotal > 0)
+        pct = (int) (dlnow * 100 / dltotal);
+    cx->prog->report(pct);
+    if (cx->prog->aborted)
+        return 1;
+    return 0;
+}
+
 struct FtpTarget
 {
     std::string ip;
@@ -184,7 +252,8 @@ static void dsh_ftp_mkdir_once(const FtpTarget &t, const std::string &dir)
 // job from there.
 static bool dsh_ftp_upload(const FtpTarget &t, const std::string &remote_name,
                            const std::string &local_path, const std::string *memory,
-                           long &http_code_out, std::string &err)
+                           long &http_code_out, std::string &err,
+                           DshProgress *progress = nullptr)
 {
     CURL *curl = ::curl_easy_init();
     if (!curl) {
@@ -208,6 +277,13 @@ static bool dsh_ftp_upload(const FtpTarget &t, const std::string &remote_name,
     ::curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
     ::curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
     ::curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dsh_curl_discard);
+
+    // live progress (and user cancellation) during the transfer
+    DshXferCtx xfer_ctx;
+    xfer_ctx.prog = progress;
+    ::curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+    ::curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, dsh_curl_xferinfo);
+    ::curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &xfer_ctx);
 
     if (memory) {
         DshMemBuf mb { memory, 0 };
@@ -520,18 +596,41 @@ bool bambu_lan_sender_enabled()
     return true;
 }
 
-BambuLanPrintResult bambu_lan_send_print(const BambuLanPrintRequest &req)
+BambuLanPrintResult bambu_lan_send_print(const BambuLanPrintRequest &req,
+                                         const BambuLanProgressFn &progress)
 {
     BambuLanPrintResult r;
+
+    // Progress is split across the whole operation so the UI advances smoothly:
+    //   0..5    reading/hashing the slice file
+    //   5..45   uploading <name>.gcode.3mf
+    //  45..55   uploading the bare <name>.3mf
+    //  55..65   writing the .bbl sidecar
+    //  65..95   MQTT connect + publish
+    //  95..100  draining the printer's reply
+    DshProgress prog;
+    prog.fn = &progress;
+    auto step = [&](int lo, int hi, const char *phase, int inner) -> bool {
+        prog.lo    = lo;
+        prog.hi    = hi;
+        prog.phase = phase;
+        return prog.report(inner);
+    };
+
     if (req.dev_ip.empty() || req.access_code.empty()) {
         r.error = "missing printer IP or access code";
         return r;
     }
 
+    step(0, 5, "hashing", 0);
     uint64_t fsize = 0;
     const std::string md5 = md5_upper_hex_of_file(req.file_path, fsize);
     if (md5.empty()) {
         r.error = "cannot read slice file: " + req.file_path;
+        return r;
+    }
+    if (!step(0, 5, "hashing", 100)) {
+        r.error = "canceled";
         return r;
     }
 
@@ -553,13 +652,15 @@ BambuLanPrintResult bambu_lan_send_print(const BambuLanPrintRequest &req)
     // The printer resolves the job through the sidecar's "file path" entry and has been
     // observed to look for the bare "<name>.3mf" name, so publish the payload under BOTH
     // candidate names (this is what the working reference upload did).
-    if (!dsh_ftp_upload(ftp, remote, req.file_path, nullptr, code, err)) {
-        r.error = "FTPS upload of " + remote + " failed: " + err;
+    prog.lo = 5; prog.hi = 45; prog.phase = "uploading slice";
+    if (!dsh_ftp_upload(ftp, remote, req.file_path, nullptr, code, err, &prog)) {
+        r.error = prog.aborted ? "canceled" : ("FTPS upload of " + remote + " failed: " + err);
         r.ftp_http_code = code;
         return r;
     }
-    if (!dsh_ftp_upload(ftp, bare, req.file_path, nullptr, code, err)) {
-        r.error = "FTPS upload of " + bare + " failed: " + err;
+    prog.lo = 45; prog.hi = 55; prog.phase = "uploading slice (alt name)";
+    if (!dsh_ftp_upload(ftp, bare, req.file_path, nullptr, code, err, &prog)) {
+        r.error = prog.aborted ? "canceled" : ("FTPS upload of " + bare + " failed: " + err);
         r.ftp_http_code = code;
         return r;
     }
@@ -586,11 +687,16 @@ BambuLanPrintResult bambu_lan_send_print(const BambuLanPrintRequest &req)
         << "}\n";
     const std::string bbl_text  = bbl.str();
     const std::string bbl_remote = "1_" + base + ".gcode.bbl";
-    if (!dsh_ftp_upload(ftp, bbl_remote, std::string(), &bbl_text, code, err)) {
-        r.error = "FTPS upload of " + bbl_remote + " failed: " + err;
+    prog.lo = 55; prog.hi = 65; prog.phase = "writing job metadata";
+    if (!dsh_ftp_upload(ftp, bbl_remote, std::string(), &bbl_text, code, err, &prog)) {
+        r.error = prog.aborted ? "canceled" : ("FTPS upload of " + bbl_remote + " failed: " + err);
         return r;
     }
     r.remote_file = remote;
+    if (!step(55, 65, "writing job metadata", 100)) {
+        r.error = "canceled";
+        return r;
+    }
 
     // ---- publish the print command
     std::ostringstream cmd;
@@ -613,23 +719,37 @@ BambuLanPrintResult bambu_lan_send_print(const BambuLanPrintRequest &req)
 
     MqttTlsClient mqtt;
     std::string mqtt_err;
+    step(65, 85, "connecting to printer", 0);
     BOOST_LOG_TRIVIAL(info) << "bambu_lan_sender: mqtt connect " << req.dev_ip << ":8883";
     if (!mqtt.connect(req.dev_ip, 8883, "bblp", req.access_code, "orcaslicer", mqtt_err)) {
         r.error = "MQTT connect failed: " + mqtt_err;
         return r;
     }
+    if (!step(65, 85, "connecting to printer", 100)) {
+        r.error = "canceled";
+        mqtt.close();
+        return r;
+    }
     const std::string topic = "device/" + req.dev_id + "/request";
+    step(85, 95, "starting print", 0);
     BOOST_LOG_TRIVIAL(info) << "bambu_lan_sender: publish " << payload;
     if (!mqtt.publish(topic, payload, mqtt_err)) {
         r.error = "MQTT publish failed: " + mqtt_err;
         mqtt.close();
         return r;
     }
+    if (!step(85, 95, "starting print", 100)) {
+        r.error = "canceled";
+        mqtt.close();
+        return r;
+    }
+    step(95, 100, "waiting for printer", 0);
     std::vector<std::string> replies;
     mqtt.drain(4000, &replies);
     mqtt.close();
     for (const std::string &m : replies)
         BOOST_LOG_TRIVIAL(info) << "bambu_lan_sender: report " << m.substr(0, 300);
+    step(95, 100, "waiting for printer", 100);
 
     r.ok = true;
     return r;

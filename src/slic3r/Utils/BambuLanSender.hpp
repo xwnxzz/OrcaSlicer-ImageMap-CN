@@ -15,9 +15,18 @@
 //
 // Verified end-to-end against a Bambu Lab P1S in LAN mode.
 
+#include <functional>
 #include <string>
 
 namespace Slic3r {
+
+// Progress reporting during the LAN send.
+//   percent 0..100 across the whole send operation
+//   phase   short human-readable label for the current step
+//   detail  optional extra text (e.g. the remote file name)
+// Return false to abort the send (used for user cancellation).
+using BambuLanProgressFn = std::function<bool(int percent, const std::string &phase,
+                                             const std::string &detail)>;
 
 struct BambuLanPrintRequest
 {
@@ -49,7 +58,10 @@ struct BambuLanPrintResult
 bool bambu_lan_sender_enabled();
 
 // Performs the whole upload + publish sequence. Blocking; call from a worker thread.
-BambuLanPrintResult bambu_lan_send_print(const BambuLanPrintRequest &req);
+// progress may be empty; when supplied it is invoked repeatedly (coarsely rate-limited)
+// with a monotonic percentage so the UI can show live progress.
+BambuLanPrintResult bambu_lan_send_print(const BambuLanPrintRequest &req,
+                                         const BambuLanProgressFn &progress = nullptr);
 
 } // namespace Slic3r
 

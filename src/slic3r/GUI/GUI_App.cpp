@@ -1955,7 +1955,14 @@ bool GUI_App::has_network_update_available() const
     if (current.empty() || current == "00.00.00.00")
         return false;
 
-    return current.substr(0, 8) != latest.substr(0, 8);
+    // DSH-PATCH: the OTA channel advertises an older plug-in build as an "update"
+    // (e.g. 02.08.02.60 -> 02.03.00.62). That offered package is a truncated build with
+    // an empty export table, and installing it breaks LAN sending completely. Never
+    // advertise a plug-in update; the working plug-in is already in place.
+    BOOST_LOG_TRIVIAL(error) << "network plugin update check suppressed by DSH-PATCH: current=" << current
+                             << ", offered_by_server=" << latest
+                             << " (offered build is not a usable plug-in; refusing to advertise)";
+    return false;
 }
 
 void GUI_App::show_network_plugin_download_dialog(bool is_update)

@@ -13789,7 +13789,13 @@ std::vector<size_t> Plater::priv::load_files(const std::vector<fs::path>& input_
                                     }
                                 }
                             }
-                        } else if (load_config && (file_version > app_version)) {
+                        } else if (load_config && (file_version > app_version)
+                                   // DSH-PATCH: this warning fires for every 3MF written by the
+                                   // re-packaged 1.0.44 build (internally 1.0.22), which is
+                                   // cosmetic only. Suppressed by default; set app config
+                                   // "warn_newer_3mf_version" to "true" to restore it.
+                                   && wxGetApp().app_config
+                                   && wxGetApp().app_config->get("warn_newer_3mf_version") == "true") {
                             if (config_substitutions.unrecogized_keys.size() > 0) {
                                 wxString text  = wxString::Format(_L("The 3MF file version %s is newer than %s's version %s, found the following unrecognized keys:"),
                                                                  file_version.to_string_sf(), std::string(SLIC3R_APP_FULL_NAME), app_version.to_string_sf());

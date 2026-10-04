@@ -152,12 +152,54 @@ cmake --build . --config Release --target OrcaSlicer -- /m:3 /p:CL_MPCount=3
 
 ## 五、已知限制
 
-- **发送过程约需 1 分钟**（实测 3.4 MB 切片耗时 59 秒），期间界面停在 10% 不动。
-  原因是同步上传 + FTPS/MQTT 两次 TLS 握手；**并非闪退**。
-  后续可改为异步上传并显示真实进度。
 - 仅针对 **P1 系列**做过实测（Bambu Lab P1S）。
   X1 / A1 系列理论上通用（同为 `file:///sdcard` 写法），但未验证。
 - 开启开发者模式属于放宽打印机自身的安全校验，请自行评估。
+
+> 早期版本发送期间进度条会停在 10% 不动约 1 分钟，容易误认为闪退。
+> 现已接入真实进度上报，详见第八节。
+
+---
+
+## 八、发送进度与取消
+
+发送过程通过 `BambuLanProgressFn(percent, phase, detail)` 回调上报真实进度，
+`percent` 为整个发送过程的 0..100，`PrintJob` 将其映射到进度条的 **20% ~ 70%** 区间
+（即 `PrintingStageCreate` 到 `PrintingStageWaiting` 之间的跨度）。
+
+各阶段对应的进度区间：
+
+| 进度 | 阶段 |
+| --- | --- |
+| 0 – 5 | 读取切片文件并计算 MD5 |
+| 5 – 45 | 上传 `<名字>.gcode.3mf`（按已发送字节数实时推进） |
+| 45 – 55 | 上传裸 `<名字>.3mf` |
+| 55 – 65 | 写 `.bbl` 伴生文件 |
+| 65 – 85 | MQTT 连接打印机 |
+| 85 – 95 | 发布 `project_file` |
+| 95 – 100 | 等待打印机回执 |
+
+界面文案会同时显示当前阶段，例如 `Sending print job over LAN(uploading slice)`；
+阶段名为英文短语，未翻译时按原样显示（与项目既有做法一致）。
+
+**取消**：进度回调中检查 `ctl.was_canceled()`，用户点「取消」会立即中止上传，
+返回 `BAMBU_NETWORK_ERR_CANCELED`，沿用既有的取消处理路径。
+`dsh_ftp_upload` 通过 libcurl 的 `CURLOPT_XFERINFOFUNCTION` 实现，更新频率限制为
+150ms 一次，避免刷爆 UI 线程。
+
+实测进度序列：
+
+```
+ 10% uploading slice
+ 20% uploading slice
+ 30% uploading slice
+ 40% uploading slice
+ 50% uploading slice (alt name)
+ 65% writing job metadata
+ 85% connecting to printer
+ 95% starting print
+100% waiting for printer
+```
 
 ---
 

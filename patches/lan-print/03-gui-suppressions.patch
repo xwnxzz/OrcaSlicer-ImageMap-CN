@@ -1,5 +1,5 @@
 diff --git a/src/slic3r/GUI/GUI_App.cpp b/src/slic3r/GUI/GUI_App.cpp
-index c44a56c7..898c2ca7 100644
+index c44a56c79e..898c2ca7ed 100644
 --- a/src/slic3r/GUI/GUI_App.cpp
 +++ b/src/slic3r/GUI/GUI_App.cpp
 @@ -1955,7 +1955,14 @@ bool GUI_App::has_network_update_available() const
@@ -19,7 +19,7 @@ index c44a56c7..898c2ca7 100644
  
  void GUI_App::show_network_plugin_download_dialog(bool is_update)
 diff --git a/src/slic3r/GUI/Plater.cpp b/src/slic3r/GUI/Plater.cpp
-index d1636194..a4ab9a3d 100644
+index d16361942a..a4ab9a3db0 100644
 --- a/src/slic3r/GUI/Plater.cpp
 +++ b/src/slic3r/GUI/Plater.cpp
 @@ -13789,7 +13789,13 @@ std::vector<size_t> Plater::priv::load_files(const std::vector<fs::path>& input_

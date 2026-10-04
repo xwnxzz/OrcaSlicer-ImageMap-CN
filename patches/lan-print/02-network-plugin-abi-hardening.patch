@@ -1,5 +1,5 @@
 diff --git a/src/slic3r/Utils/FileTransferUtils.cpp b/src/slic3r/Utils/FileTransferUtils.cpp
-index 25fbd4f9..c909e257 100644
+index 25fbd4f99a..c909e25761 100644
 --- a/src/slic3r/Utils/FileTransferUtils.cpp
 +++ b/src/slic3r/Utils/FileTransferUtils.cpp
 @@ -1,5 +1,7 @@
@@ -239,7 +239,7 @@ index 25fbd4f9..c909e257 100644
  
      return true;
 diff --git a/src/slic3r/Utils/FileTransferUtils.hpp b/src/slic3r/Utils/FileTransferUtils.hpp
-index 037a1bef..36827215 100644
+index 037a1bef0c..36827215c6 100644
 --- a/src/slic3r/Utils/FileTransferUtils.hpp
 +++ b/src/slic3r/Utils/FileTransferUtils.hpp
 @@ -128,10 +128,20 @@ struct FileTransferModule

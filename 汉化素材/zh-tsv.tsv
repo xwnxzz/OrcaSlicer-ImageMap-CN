@@ -1,0 +1,316 @@
+2D Gradient	2D 渐变
+2D Gradient Settings	2D 渐变设置
+45 degree width modulation - not recommended	45 度线宽调制 —— 不推荐
+Add Center	添加中心点
+Add End	添加终点
+Add Point	添加控制点
+Add Start	添加起点
+Add Texture Mapping Zone	添加纹理映射区
+Apply to:	应用于：
+Aspect ratio	宽高比
+Assign Texture Mapping Zone	指定纹理映射区
+Assign to selected objects	指定给选中对象
+Assign to selected objects (erase region painting)	指定给选中对象（擦除区域涂色）
+Atlas texture	图集纹理
+Auto adjust filament selection when changing color mode	更换颜色模式时自动调整耗材选择
+Background color	背景色
+Background color used when texture mapping samples translucent color data.	纹理映射采样半透明颜色数据时使用的背景色。
+Bake image texture to vertex colors	将图像纹理烘焙为顶点色
+Brush color:	画笔颜色：
+Brush softness	画笔柔和度
+Cancel import	取消导入
+Cancel selection	取消选择
+Cancelling...	正在取消…
+Choose how to import this model's color data.	选择如何导入此模型的颜色数据。
+Choose options to use when subdividing mesh:	选择细分网格时使用的选项：
+Clear Linear Gradient Points	清除线性渐变点
+Clear Points	清除控制点
+Clear RGB data	清除 RGB 数据
+Clear RGBA data	清除 RGBA 数据
+Clear color data	清除颜色数据
+Clear color data background	清除颜色数据背景
+Clear image	清除图像
+Clear image texture data	清除图像纹理数据
+Clear vertex colors	清除顶点色
+Click an object to set gradient end point	点击对象以设置渐变终点
+Click an object to set gradient start point	点击对象以设置渐变起点
+Click an object to set radial gradient center point	点击对象以设置径向渐变中心点
+Click an object to set radial gradient radius point	点击对象以设置径向渐变半径点
+Click the icon to edit color region painting of the object	点击图标以编辑该对象的颜色区域涂色
+Closest combination (no dithering)	最接近的组合（不抖动）
+Color Region Painting	颜色区域涂色
+Color prediction mode	颜色预测模式
+Color region painting	颜色区域涂色
+Color region painting editing	颜色区域涂色编辑
+Colored top layers	顶层着色
+Colors	颜色
+Compact Offset Mode	紧凑偏移模式
+Convert RGBA data to image data	将 RGBA 数据转换为图像数据
+Convert RGBA data to image texture	将 RGBA 数据转换为图像纹理
+Convert existing colors to raw offset data (slow)	将现有颜色转换为原始偏移数据（较慢）
+Convert image texture to RGB data	将图像纹理转换为 RGB 数据
+Convert painted color regions into RGBA data, clear the regions, and assign a texture mapping zone.	将涂色的颜色区域转换为 RGBA 数据，清除这些区域，并指定一个纹理映射区。
+Convert painted color regions into image texture data, clear the regions, and assign a texture mapping zone.	将涂色的颜色区域转换为图像纹理数据，清除这些区域，并指定一个纹理映射区。
+Convert painted color regions into imported vertex color data, clear the regions, and assign a texture mapping zone.	将涂色的颜色区域转换为导入的顶点色数据，清除这些区域，并指定一个纹理映射区。
+Convert regions to Image Texture	将区域转换为图像纹理
+Convert regions to RGBA data	将区域转换为 RGBA 数据
+Convert regions to image texture	将区域转换为图像纹理
+Convert regions to vertex colors	将区域转换为顶点色
+Convert vertex colors to RGB data	将顶点色转换为 RGB 数据
+Convert vertex colors to regions (will erase painting)	将顶点色转换为区域（会清除涂色）
+Copy them into OrcaSlicer-ImageMap? The original settings will not be changed.	是否将它们复制到 OrcaSlicer-ImageMap？原始设置不会被修改。
+Create RGBA data	创建 RGBA 数据
+Create blank RGB data	创建空白 RGB 数据
+Create color data	创建颜色数据
+Create image texture	创建图像纹理
+Create vertex colors	创建顶点色
+Delete All Texture Mapping Zones	删除全部纹理映射区
+Delete all texture mapping zones?	删除全部纹理映射区？
+Disable v2 perimeter path modulation smoothing	关闭 v2 周长路径调制平滑
+Duplicate	复制
+Enable dithering	启用抖动
+Enable prime tower image mapping	启用擦拭塔图像映射
+Enable top-surface image coloring	启用顶面图像上色
+Enter text to preview.	输入文字以预览。
+Entering Paint-on fuzzy skin	进入绒毛表面涂色
+Entering Paint-on supports	进入支撑涂色
+Entering RGB color painting	进入 RGB 颜色涂色
+Entering color region painting	进入颜色区域涂色
+Erase RGBA data	擦除 RGBA 数据
+Erase RGBA data and use existing image data (may not look as it does now)	擦除 RGBA 数据并使用现有图像数据（外观可能与当前不同）
+Erase region painting	擦除区域涂色
+Exact	精确
+Filament overhang contrast	耗材悬垂对比度
+Filament slot	耗材槽位
+Fit to Object	适配到对象
+Fuzzy Skin Painting	绒毛表面涂色
+Generate new image texture UV map	生成新的图像纹理 UV 贴图
+Generic solver	通用求解器
+Generic solver lookup	通用求解器查找
+Generic solver mixer	通用求解器混合器
+Global strength multiplier for texture mapping outer wall offset gradients.	纹理映射外墙偏移渐变的全局强度倍率。
+Gradient calculated from	渐变计算依据
+Gradient mode	渐变模式
+Halftone (increased detail) - not recommended	半调（细节更多）—— 不推荐
+Halftone dot size	半调网点大小
+Halftone v2	半调 v2
+Hide Filament Strengths and Offsets	隐藏耗材强度与偏移
+Horizontal resolution	水平分辨率
+Image Options	图像选项
+Image Texture	图像纹理
+Image and mask have different sizes.	图像与遮罩尺寸不一致。
+Image file	图像文件
+Image texture actions	图像纹理操作
+Import vertex colors as regions	将顶点色作为区域导入
+Import with textures (for texture mapping)	带纹理导入（用于纹理映射）
+Import with vertex colors (for texture mapping)	带顶点色导入（用于纹理映射）
+Improve Projection Accuracy	提高投影精度
+Infill type	填充类型
+Interpret texture color as	纹理颜色解释为
+Invalid calibration	校准无效
+Leaving Paint-on fuzzy skin	退出绒毛表面涂色
+Leaving Paint-on supports	退出支撑涂色
+Leaving RGB color painting	退出 RGB 颜色涂色
+Leaving color region painting	退出颜色区域涂色
+Limit color simulation texture resolution	限制颜色模拟纹理分辨率
+Line width modulation	线宽调制
+Linear Gradient	线性渐变
+Load image	载入图像
+Load prime tower back image	载入擦拭塔背面图像
+Load prime tower front image	载入擦拭塔正面图像
+Load projection image	载入投影图像
+Load side-surface color calibration	载入侧面颜色校准
+Load top-surface color calibration	载入顶面颜色校准
+Loaded image	已载入图像
+Lower bound for external perimeter line width used by texture mapping outer wall gradient effects.	纹理映射外墙渐变效果所用外周长线宽的下限。
+Make overhang printable...	使悬垂可打印…
+Manage Color Data	管理颜色数据
+Manage Color Data for this object	管理此对象的颜色数据
+Map RGBA Colors to Filaments	将 RGBA 颜色映射到耗材
+Marching squares	Marching squares
+Mask:	遮罩：
+Max infill layer depth	最大填充层深度
+Max texture size:	最大纹理尺寸：
+Minimum visibility offset	最小可见偏移
+Modulation Mode	调制模式
+Modulation mode:	调制模式：
+New size: %u x %u (%.1f%% dimensions, %.1f%% pixels)	新尺寸：%u x %u（尺寸 %.1f%%，像素 %.1f%%）
+No calibration loaded	未载入校准
+No handler found for image type.	找不到该图像类型的处理程序。
+No image loaded	未载入图像
+No texture maps yet.	尚无纹理映射。
+Non-linear offset adjustment	非线性偏移调整
+Object too large?	对象过大？
+Offset Gradient	偏移渐变
+Offset X	X 偏移
+Offset angle	偏移角度
+Opacity	不透明度
+Open OBJ color mapping dialog using stored imported vertex colors.	使用已存储的导入顶点色打开 OBJ 颜色映射对话框。
+Orca Slicer ImageMap will now terminate.	Orca Slicer ImageMap 即将退出。
+OrcaSlicer ImageMap integrates image texture mapping changes into the OrcaSlicer codebase.	OrcaSlicer ImageMap 将图像纹理映射的改动集成进 OrcaSlicer 代码库。
+OrcaSlicer-ImageMap setup	OrcaSlicer-ImageMap 设置
+Outer wall offset gradient global strength	外墙偏移渐变全局强度
+Overall strength	总体强度
+Paint RGB color	涂 RGB 颜色
+Paint by color	按颜色涂色
+Paint by slope	按坡度涂色
+Paint color regions based on the surface slope.	依据表面坡度涂颜色区域。
+Paint filament regions based on the object texture color.	依据对象纹理颜色涂耗材区域。
+Paint with	使用工具
+Paint-on fuzzy skin editing	绒毛表面涂色编辑
+Paint-on supports editing	支撑涂色编辑
+Painting cannot be used on objects with RGBA data.	带 RGBA 数据的对象无法使用涂色。
+Partition color regions before fill	填充前分割颜色区域
+Per-color strengths	各颜色强度
+Per-filament minimum offset	每种耗材的最小偏移
+Per-filament strength	各耗材强度
+Percent	百分比
+Perimeter path modulation (legacy v1)	周长路径调制（旧版 v1）
+Perimeter path modulation (v2)	周长路径调制（v2）
+Pick color from model	从模型拾取颜色
+Pick from model	从模型拾取
+Polygon tracing resolution	多边形描摹分辨率
+Polygonization mode	多边形化模式
+Polygonize color regions	将颜色区域多边形化
+Preparing wipe tower texture	正在准备擦拭塔纹理
+Present	显示
+Preserve aspect ratio	保持宽高比
+Prime Tower Images	擦拭塔图像
+Prime Tower Texture Mapping	擦拭塔纹理映射
+Project image onto model	将图像投影到模型
+Project image to model surface	将图像投影到模型表面
+Project solid color onto model	将纯色投影到模型
+Project text onto model	将文字投影到模型
+Projecting image	正在投影图像
+Projecting solid color	正在投影纯色
+Projecting text	正在投影文字
+RGB Beer-Lambert - not recommended	RGB Beer-Lambert —— 不推荐
+RGB Color Painting	RGB 颜色涂色
+RGB Only	仅 RGB
+RGB color painting editing	RGB 颜色涂色编辑
+RGBA data	RGBA 数据
+RGBA data actions	RGBA 数据操作
+Radial Gradient	径向渐变
+Raw Offset Data Converted	原始偏移数据已转换
+Raw Offset Texture	原始偏移纹理
+Raw Offset Texture Mapping Zone	原始偏移纹理映射区
+Raw filament offset	原始耗材偏移
+Reduced overhang slopes	减缓的悬垂坡度
+Remap filament region painting to subdivided mesh	将耗材区域涂色重映射到细分网格
+Remap region painting to repaired mesh	将区域涂色重映射到修复后的网格
+Remap region painting to simplified mesh	将区域涂色重映射到简化后的网格
+Remapping color data	正在重映射颜色数据
+Remove Point	移除控制点
+Remove color region painting	移除颜色区域涂色
+Remove support painting	移除支撑涂色
+Repeats	重复次数
+Reset section view direction	重置剖面视图方向
+Reset strengths and offsets	重置强度与偏移
+Resize Texture	调整纹理尺寸
+Resize image texture	调整图像纹理尺寸
+Reverse repeats	反向重复
+Rotate image (Z):	旋转图像（Z）：
+Rotation count	旋转次数
+Rotation over model height	沿模型高度旋转
+Scroll Offset	滚动偏移
+Select Images	选择图像
+Selected filament	选中的耗材
+Serialized global texture mapping settings.	序列化的全局纹理映射设置。
+Serialized texture mapping rows.	序列化的纹理映射行。
+Set Center	设置中心点
+Set End	设置终点
+Set Linear Gradient End Point	设置线性渐变终点
+Set Linear Gradient Start Point	设置线性渐变起点
+Set Start	设置起点
+Set color data background	设置颜色数据背景
+Set filament colors from calibration json	从校准 JSON 设置耗材颜色
+Set linear gradient point	设置线性渐变点
+Show Direction Arrow	显示方向箭头
+Show Filament Strengths and Offsets	显示耗材强度与偏移
+Show image overlay	显示图像叠加
+Show original RGBA colors	显示原始 RGBA 颜色
+Side Calibration	侧面校准
+Side calibration mode	侧面校准模式
+Side-surface data	侧面数据
+Simplify RGBA data	简化 RGBA 数据
+Slice now	立即切片
+Solid color	纯色
+Solid color:	纯色：
+Some color data could not be remapped after repair and was cleared.	修复后部分颜色数据无法重映射，已清除。
+Some color data could not be remapped after subdivision and was cleared.	细分后部分颜色数据无法重映射，已清除。
+Some region painting could not be remapped after repair and was cleared.	修复后部分区域涂色无法重映射，已清除。
+Some region painting could not be remapped after subdivision and was cleared.	细分后部分区域涂色无法重映射，已清除。
+Source	来源
+Stage 2 - Remapping color data	第 2 阶段 —— 重映射颜色数据
+Start	起点
+Stop picking	停止拾取
+Stop picking color from model	停止从模型拾取颜色
+Subdivide preview	细分预览
+Subdividing mesh	正在细分网格
+Subdivision failed.	细分失败。
+Subdivision finished	细分完成
+Subdivision options	细分选项
+Support/Color Region Painting: adjust pen radius	支撑/颜色区域涂色：调整笔刷半径
+Support/Color Region Painting: adjust section position	支撑/颜色区域涂色：调整剖面位置
+Surface Texture	表面纹理
+Surface angle threshold	表面角度阈值
+Surface infill color pattern length	表面填充颜色图案长度
+Surface normal	表面法线
+Surface scatter correction	表面散射校正
+Surface-anchored stack optimizations	表面锚定堆叠优化
+Surface-anchored stacks	表面锚定堆叠
+Text color	文字颜色
+Texture Mapping	纹理映射
+Texture Mapping 2D Gradient	纹理映射 2D 渐变
+Texture Mapping Linear Gradient	纹理映射线性渐变
+Texture Mapping Options	纹理映射选项
+Texture Mapping Radial Gradient	纹理映射径向渐变
+Texture Mapping Raw Offset	纹理映射原始偏移
+Texture Mapping Zones	纹理映射区
+Texture map actions	纹理映射操作
+Texture mapping background color	纹理映射背景色
+Texture mapping definitions	纹理映射定义
+Texture mapping global settings	纹理映射全局设置
+Texture opacity	纹理不透明度
+The entered text is too large to preview.	输入的文字过大，无法预览。
+The image is not an ImageMap raw filament offset atlas.	该图像不是 ImageMap 原始耗材偏移图集。
+The image is too small for an ImageMap raw filament offset header.	图像太小，无法容纳 ImageMap 原始耗材偏移文件头。
+The object is too small	对象太小
+This object already has RGBA data, which is shown before image texture data.	此对象已有 RGBA 数据，显示优先级高于图像纹理数据。
+This object already has RGBA data, which is shown before vertex colors.	此对象已有 RGBA 数据，显示优先级高于顶点色。
+This object already has image texture data, which is shown before vertex colors.	此对象已有图像纹理数据，显示优先级高于顶点色。
+This object does not have RGBA, image texture, or vertex color data.	此对象没有 RGBA、图像纹理或顶点色数据。
+This object does not have painted color regions.	此对象没有已涂色的颜色区域。
+Top Calibration	顶面校准
+Top-Surface Coloring Enabled	顶面着色已启用
+Top-surface coloring	顶面着色
+Top-surface data	顶面数据
+Transferring color data	正在传输颜色数据
+Trust color order for filaments (don't detect colors)	信任耗材颜色顺序（不检测颜色）
+Unable to add prime tower texture image file to archive	无法将擦拭塔纹理图像文件加入归档
+Unable to add standard 3MF texture image file to archive	无法将标准 3MF 纹理图像文件加入归档
+Unable to add texture resources to model file	无法向模型文件添加纹理资源
+Unable to convert the selected text colors to raw filament offsets.	无法将所选文本颜色转换为原始耗材偏移。
+Unable to create raw filament offset data for the rasterized text.	无法为栅格化文本创建原始耗材偏移数据。
+Unable to display the selected image.	无法显示所选图像。
+Unable to encode ImageMap raw filament offset atlas texture image	无法编码 ImageMap 原始耗材偏移图集纹理图像
+Unable to encode prime tower texture image	无法编码擦拭塔纹理图像
+Unable to encode standard 3MF texture image	无法编码标准 3MF 纹理图像
+Unable to load the selected image.	无法载入所选图像。
+Unable to preview the rasterized text as raw filament offsets.	无法将栅格化文本预览为原始耗材偏移。
+Unable to preview the selected raw filament offset atlas.	无法预览所选原始耗材偏移图集。
+Unable to rasterize the entered text.	无法栅格化输入的文字。
+Unable to resize the selected image.	无法调整所选图像尺寸。
+Unable to resize the selected raw filament offset atlas.	无法调整所选原始耗材偏移图集尺寸。
+Unable to use the selected font.	无法使用所选字体。
+Unsplit RGBA data	取消拆分 RGBA 数据
+Upper bound for external perimeter line width used by texture mapping.	纹理映射所用外周长线宽的上限。
+Use beam search for stack expansion	使用束搜索扩展堆叠
+Use legacy fixed color mode	使用旧版固定颜色模式
+Use modulated overhang geometry in support generation	在支撑生成中使用调制后的悬垂几何
+Vertex Colors	顶点色
+Vertex colors	顶点色
+Weld close vertexes	焊接相邻顶点
+XY Size compensation cannot be combined with color-painting.	XY 尺寸补偿不能与颜色涂色同时使用。
+XY Size compensation cannot be combined with fuzzy skin painting.	XY 尺寸补偿不能与绒毛表面涂色同时使用。
+Zoom to fit	缩放以适配

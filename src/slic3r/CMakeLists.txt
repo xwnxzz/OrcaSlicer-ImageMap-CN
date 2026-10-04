@@ -657,6 +657,9 @@ set(SLIC3R_GUI_SOURCES
     Utils/WxFontUtils.hpp
     Utils/FileTransferUtils.cpp
     Utils/FileTransferUtils.hpp
+    # DSH-PATCH: self-implemented LAN print sender (no bambu_networking plug-in)
+    Utils/BambuLanSender.cpp
+    Utils/BambuLanSender.hpp
 )
 
 add_subdirectory(GUI/DeviceCore)
